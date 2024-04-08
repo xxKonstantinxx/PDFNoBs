@@ -1,0 +1,6 @@
+appId: com.example.pdfmergertool
+productName: PDF Merger Tool
+directories:
+  output: dist
+mac:
+  target: dmg
