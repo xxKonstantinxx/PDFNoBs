@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Merger Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>No BS PDF Merger</h1>
+
+    <input type="file" id="pdf-input" class="pdf-input" style="display: none;" multiple accept=".pdf">
+    
+    <button onclick="document.getElementById('pdf-input').click()" class="btn add-btn">Add PDF Files</button>
+
+    <button onclick="mergeAndSavePdfs()" class="btn merge-save-btn">Merge and Save PDFs</button>
+
+    <div id="pdf-list-container">
+        <ul id="pdf-list" class="pdf-list">
+        </ul>
+    </div>
+
+    <script>
+        const inputElement = document.getElementById('pdf-input');
+
+        inputElement.addEventListener('change', function() {
+            const fileList = this.files;
+            const pdfList = document.getElementById('pdf-list');
+
+            Array.from(fileList).forEach(file => {
+                const listItem = document.createElement('li');
+                listItem.className = 'pdf-item';
+                const fileURL = URL.createObjectURL(file);
+                listItem.setAttribute('data-pdf-url', fileURL);
+
+                listItem.innerHTML = `
+                    <span class="pdf-name">${file.name}</span>
+                    <button onclick="removePdf(this.parentNode)" class="btn remove-btn">Remove</button>
+                    <button onclick="movePdfUp(this.parentNode)" class="btn move-up-btn">Move Up</button>
+                    <button onclick="movePdfDown(this.parentNode)" class="btn move-down-btn">Move Down</button>
+                `;
+                pdfList.appendChild(listItem);
+            });
+
+            this.value = '';
+        });
+
+        function removePdf(item) {
+            const pdfUrl = item.getAttribute('data-pdf-url');
+            URL.revokeObjectURL(pdfUrl);
+            item.remove();
+        }
+
+        function movePdfUp(item) {
+            const previous = item.previousElementSibling;
+            if (previous) {
+                item.parentNode.insertBefore(item, previous);
+            }
+        }
+
+        function movePdfDown(item) {
+            const next = item.nextElementSibling;
+            if (next) {
+                item.parentNode.insertBefore(next, item);
+            }
+        }
+
+
+        async function mergeAndSavePdfs() {
+            const { PDFDocument } = require('pdf-lib');
+            const { ipcRenderer } = require('electron');
+
+            const pdfList = document.getElementById('pdf-list');
+            const pdfItems = pdfList.querySelectorAll('.pdf-item');
+            const mergedPdfDoc = await PDFDocument.create();
+            let allPdfsProcessed = true;
+
+            for (let item of pdfItems) {
+                const pdfUrl = item.getAttribute('data-pdf-url');
+                const arrayBuffer = await fetch(pdfUrl).then(res => res.arrayBuffer());
+                try {
+                    const pdfDoc = await PDFDocument.load(arrayBuffer);
+                    const copiedPages = await mergedPdfDoc.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                    copiedPages.forEach(page => mergedPdfDoc.addPage(page));
+                } catch (error) {
+                    console.error("Cannot process encrypted PDFs:", error);
+                    allPdfsProcessed = false;
+                    alert("One or more PDFs are encrypted and cannot be processed. Please remove them and try again.");
+                    break; 
+                }
+            }
+
+            if (allPdfsProcessed) {
+                const mergedPdfBytes = await mergedPdfDoc.save().then(alert("PDF's Saved. No BS!"));
+
+                const filePath = await ipcRenderer.invoke('show-save-dialog', {
+                    buttonLabel: 'Save Merged PDF',
+                    defaultPath: `MergedPDF.pdf`,
+                });
+
+                if (filePath) {
+                    require('fs').writeFileSync(filePath, mergedPdfBytes);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
