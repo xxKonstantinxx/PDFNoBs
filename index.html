@@ -91,7 +91,7 @@
             }
 
             if (allPdfsProcessed) {
-                const mergedPdfBytes = await mergedPdfDoc.save().then(alert("PDF's Saved. No BS!"));
+                const mergedPdfBytes = await mergedPdfDoc.save();
 
                 const filePath = await ipcRenderer.invoke('show-save-dialog', {
                     buttonLabel: 'Save Merged PDF',
@@ -100,6 +100,7 @@
 
                 if (filePath) {
                     require('fs').writeFileSync(filePath, mergedPdfBytes);
+                    alert("PDFs merged and saved successfully! NO BS!"); 
                 }
             }
         }
