@@ -10,3 +10,5 @@ No ads, no payment, all open source.
 Just merge your PDFs and go on with your day.
 
 Please feel free to add issues and suggestions and keep in mind, this is my first project.
+
+For all you non techies, here is the download link for the app: https://www.file-upload.net/en/download-15303596/PDFMergerTool-1.0.0-arm64.dmg.html
