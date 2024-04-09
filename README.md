@@ -13,3 +13,5 @@ Please feel free to add issues and suggestions and keep in mind, this is my firs
 
 For all you nontechies, here is the download link for the app: 
 https://www.file-upload.net/en/download-15303596/PDFMergerTool-1.0.0-arm64.dmg.html
+
+I know that multiple applications already exist for this, but it seemed to be a good first project :)
